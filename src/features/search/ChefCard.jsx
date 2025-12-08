@@ -56,38 +56,39 @@ export default function ChefCard({ chef }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all transform hover:scale-105 border-2 border-orange-100">
+    <div className="card">
       {chef.profile_image && (
         <img
           src={chef.profile_image}
           alt={chef.name}
-          className="w-full h-48 object-cover"
+          className="card-image"
         />
       )}
-      <div className="p-6">
-        <h3 className="text-xl font-bold mb-2">{chef.name}</h3>
-        <p className="text-gray-600 mb-2">{chef.cuisine}</p>
-        <p className="text-gray-700 text-sm mb-4">{chef.bio}</p>
+      <div className="card-body">
+        <h3 className="card-title">{chef.name}</h3>
+        <p className="card-text">{chef.cuisine}</p>
+        <p className="card-text">{chef.bio}</p>
         
-        <div className="space-y-2 mb-4">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Location:</span>
-            <span className="font-medium">{chef.location}</span>
+        <div style={{marginBottom: '16px'}}>
+          <div className="card-info">
+            <span className="card-info-label">Location:</span>
+            <span className="card-info-value">{chef.location}</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Price:</span>
-            <span className="font-medium text-green-600">${chef.hourly_rate}/hour</span>
+          <div className="card-info">
+            <span className="card-info-label">Price:</span>
+            <span className="card-info-value" style={{color: '#28a745'}}>${chef.hourly_rate}/hour</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Experience:</span>
-            <span className="font-medium">{chef.years_experience} years</span>
+          <div className="card-info">
+            <span className="card-info-label">Experience:</span>
+            <span className="card-info-value">{chef.years_experience} years</span>
           </div>
         </div>
 
         {!showBookingForm ? (
           <button
             onClick={() => setShowBookingForm(true)}
-            className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-3 rounded-xl hover:from-orange-600 hover:to-pink-600 transition font-medium transform hover:scale-105 shadow-md"
+            className="gradient-button"
+            style={{width: '100%'}}
           >
             📅 Book Now
           </button>
