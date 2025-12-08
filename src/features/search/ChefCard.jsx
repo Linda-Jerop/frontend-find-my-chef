@@ -56,7 +56,7 @@ export default function ChefCard({ chef }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all transform hover:scale-105 border-2 border-orange-100">
       {chef.profile_image && (
         <img
           src={chef.profile_image}
@@ -87,9 +87,9 @@ export default function ChefCard({ chef }) {
         {!showBookingForm ? (
           <button
             onClick={() => setShowBookingForm(true)}
-            className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-3 rounded-xl hover:from-orange-600 hover:to-pink-600 transition font-medium transform hover:scale-105 shadow-md"
           >
-            Book Now
+            📅 Book Now
           </button>
         ) : (
           <form onSubmit={handleBooking} className="space-y-3 mt-4 border-t pt-4">
