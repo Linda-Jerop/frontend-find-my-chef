@@ -1,114 +1,87 @@
-import { useEffect } from 'react';
-import { useBookingStore } from '../../store/bookingStore';
+import React, { useState } from 'react';
+import axios from 'axios';
+import useAuthStore from '../../stores/useAuthStore';
 
-export default function ClientBookings() {
-  const { bookings, isLoading, error, fetchClientBookings, cancelBooking } = useBookingStore();
+const FormInput = ({ label, type, value, onChange, ...props }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700">{label}</label>
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+      {...props}
+    />
+  </div>
+);
 
-  useEffect(() => {
-    fetchClientBookings();
-  }, [fetchClientBookings]);
+const ClientBookingForm = ({ chefId, chefName, hourlyRate }) => {
+  const [bookingDate, setBookingDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [hours, setHours] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const token = useAuthStore((state) => state.token);
 
-  const handleCancel = (bookingId) => {
-    if (window.confirm('Are you sure you want to cancel this booking?')) {
-      cancelBooking(bookingId);
+  const calculateTotal = () => {
+    if (!hourlyRate || hours < 1) return 0;
+    return (hourlyRate * hours).toFixed(2);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!token) {
+      setError('You must be logged in to make a booking.');
+      return;
+    }
+
+    if (!bookingDate || !startTime) {
+      setError('Please select a date and time for your booking.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    const bookingPayload = {
+      chef_id: chefId,
+      booking_date: bookingDate,
+      start_time: startTime,
+      hours: Number(hours),
+    };
+
+    try {
+      await axios.post('/api/bookings', bookingPayload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      alert(`Booking request sent for ${chefName}!`);
+    } catch (apiError) {
+      setError(apiError.response?.data?.detail || 'An unexpected error occurred.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl">Loading bookings...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">My Bookings</h1>
-
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+    <div className="max-w-lg mx-auto p-8 bg-white rounded-xl shadow-lg space-y-6">
+      <h2 className="text-3xl font-bold text-center text-gray-800">Book {chefName}</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <FormInput label="Date" type="date" value={bookingDate} onChange={(e) => setBookingDate(e.target.value)} required/>
+        <FormInput label="Start Time" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} required/>
+        <FormInput label={`Hours (at $${hourlyRate}/hr)`} type="number" value={hours} onChange={(e) => setHours(e.target.value)} min="1" required/>
+        <div className="pt-2 text-xl font-semibold text-right text-gray-700">
+          <span>Total: </span>
+          <span className="font-bold text-green-600">${calculateTotal()}</span>
         </div>
-      )}
-
-      {bookings.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-600 text-lg">No bookings yet</p>
-          <p className="text-gray-500 mt-2">Search for chefs and make your first booking!</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {bookings.map((booking) => (
-            <div key={booking.id} className="bg-white border rounded-lg p-6 shadow-sm">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-semibold text-lg">{booking.chef_name}</h3>
-                  <p className="text-gray-600">{booking.cuisine}</p>
-                </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    booking.status === 'pending'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : booking.status === 'confirmed'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}
-                >
-                  {booking.status}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <p className="text-sm text-gray-500">Date</p>
-                  <p className="font-medium">{new Date(booking.date).toLocaleDateString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Time</p>
-                  <p className="font-medium">{booking.time}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Location</p>
-                  <p className="font-medium">{booking.location}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Guests</p>
-                  <p className="font-medium">{booking.number_of_guests}</p>
-                </div>
-              </div>
-
-              {booking.special_requests && (
-                <div className="mb-4">
-                  <p className="text-sm text-gray-500">Special Requests</p>
-                  <p className="text-gray-700">{booking.special_requests}</p>
-                </div>
-              )}
-
-              {booking.status === 'pending' && (
-                <button
-                  onClick={() => handleCancel(booking.id)}
-                  className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
-                >
-                  Cancel Booking
-                </button>
-              )}
-
-              {booking.status === 'confirmed' && (
-                <div className="bg-green-50 border border-green-200 rounded p-3 text-green-800">
-                  ✓ Booking confirmed! The chef will contact you soon.
-                </div>
-              )}
-
-              {booking.status === 'declined' && (
-                <div className="bg-red-50 border border-red-200 rounded p-3 text-red-800">
-                  This booking was declined by the chef.
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+        <button type="submit" disabled={isSubmitting} className="w-full py-3 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:bg-gray-400">
+          {isSubmitting ? 'Sending...' : 'Send Booking Request'}
+        </button>
+      </form>
     </div>
   );
-}
+};
+
+export default ClientBookingForm;
